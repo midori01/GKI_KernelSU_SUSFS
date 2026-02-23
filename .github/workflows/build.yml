@@ -499,7 +499,7 @@ jobs:
               ;;
             "KowSU")
               echo "添加 KowSU..."
-              curl -LSs "https://raw.githubusercontent.com/KOWX712/KernelSU/main/kernel/setup.sh" | bash $BRANCH
+              curl -LSs "https://raw.githubusercontent.com/midori01/KernelSU/main/kernel/setup.sh" | bash $BRANCH
               
               # 计算并设置 KSU 版本号
               cd KernelSU
