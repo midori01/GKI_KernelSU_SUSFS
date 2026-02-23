@@ -335,7 +335,7 @@ jobs:
             "MKSU") REPO_URL="https://github.com/5ec1cff/KernelSU.git"; REPO_URL2="5ec1cff/KernelSU" ;;
             "SukiSU") REPO_URL="https://github.com/SukiSU-Ultra/SukiSU-Ultra.git"; REPO_URL2="SukiSU-Ultra/SukiSU-Ultra" ;;
             "ReSukiSU") REPO_URL="https://github.com/ReSukiSU/ReSukiSU.git"; REPO_URL2="ReSukiSU/ReSukiSU" ;;
-            "KowSU") REPO_URL="https://github.com/KOWX712/KernelSU.git"; REPO_URL2="KOWX712/KernelSU" ;;
+            "KowSU") REPO_URL="https://github.com/midori01/KernelSU.git"; REPO_URL2="midori01/KernelSU" ;;
           esac
 
           if [[ "${{ inputs.kernelsu_branch }}" == "Stable(标准)" && "${{ inputs.kernelsu_variant }}" != "MKSU" ]]; then
