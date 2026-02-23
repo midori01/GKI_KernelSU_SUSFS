@@ -482,6 +482,21 @@ jobs:
             "MKSU")
               echo "添加 MKSU..."
               curl -LSs "https://raw.githubusercontent.com/5ec1cff/KernelSU/main/kernel/setup.sh" | bash $BRANCH
+
+              # 计算并设置 KSU 版本号
+              cd KernelSU
+              KSU_GIT_VERSION=$(git rev-list --count HEAD)
+              KSU_VERSION=$((20000 + KSU_GIT_VERSION))
+              echo "KSU_VERSION=$KSU_VERSION" >> $GITHUB_ENV
+              echo "计算的 KSU 版本号: $KSU_VERSION"
+
+              # 更新 Kbuild 中的版本号
+              if [ -f "kernel/Kbuild" ]; then
+                sed -i "s/DKSU_VERSION=16/DKSU_VERSION=${KSU_VERSION}/" kernel/Kbuild
+                echo "已更新 kernel/Kbuild 中的版本号"
+              fi
+              cd ..
+              ;;
             "KowSU")
               echo "添加 KowSU..."
               curl -LSs "https://raw.githubusercontent.com/KOWX712/KernelSU/main/kernel/setup.sh" | bash $BRANCH
