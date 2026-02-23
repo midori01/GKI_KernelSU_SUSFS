@@ -83,7 +83,7 @@ jobs:
             git clone https://github.com/5ec1cff/KernelSU.git KernelSU
           elif [ "${{ inputs.kernelsu_variant }}" == "KowSU" ]; then
             echo "This is the KowSU variant"
-            git clone https://github.com/KOWX712/KernelSU.git KernelSU
+            git clone https://github.com/midori01/KernelSU.git KernelSU
           else
             echo "Unknown variant"
           fi
@@ -143,7 +143,7 @@ jobs:
             KSUM="manager"
           elif [ "${{ inputs.kernelsu_variant }}" == "KowSU" ]; then
             echo "KowSU..."
-            REPO="KOWX712/KernelSU"
+            REPO="midori01/KernelSU"
             KSUM="manager"
           fi
 
