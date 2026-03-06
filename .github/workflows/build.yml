@@ -938,7 +938,10 @@ jobs:
           # 配置内核名称
           if [ -n "${{ inputs.version }}" ]; then
             CLEAN_VERSION=$(echo "${{ inputs.version }}" | sed -E 's/^[0-9]+\.[0-9]+\.[0-9]+//')
-            sed -i '$s/^echo .*/echo "'"$CLEAN_VERSION"'"/' ./common/scripts/setlocalversion
+            # 6.6+：新格式 setlocalversion，保留 ${KERNELVERSION}
+            perl -i -0777 -pe 's/(.*)echo "\$\{KERNELVERSION\}\$\{file_localversion\}\$\{config_localversion\}\$\{LOCALVERSION\}\$\{scm_version\}"/$1echo "\$\{KERNELVERSION\}'"${CLEAN_VERSION}"'"/s' ./common/scripts/setlocalversion 2>/dev/null || true
+            # 旧格式（5.x/6.1）回退
+            sed -i "\$s|echo \"\$res\"|echo \"${CLEAN_VERSION}\"|" ./common/scripts/setlocalversion 2>/dev/null || true
             sed -i '/^CONFIG_LOCALVERSION=/ s/="\([^"]*\)"/="'"$CLEAN_VERSION"'"/' ./common/arch/arm64/configs/gki_defconfig
           elif [ ! -f "build/build.sh" ]; then
             cd ./common
@@ -951,17 +954,18 @@ jobs:
               "android16-6.12") KMI_TAG="android16-5" ;;
               *) KMI_TAG="${{ inputs.android_version }}" ;;
             esac
-            KMI_LOCAL="-${KMI_TAG}-g${GHASH}-${BID}-4k"
 
-            # 6.1 通过 setlocalversion 注入版本名称
             if [ "${{ inputs.kernel_version }}" = "6.1" ]; then
+              # 6.1：通过 setlocalversion 注入版本名称（旧格式）
+              KMI_LOCAL="-${KMI_TAG}-g${GHASH}-${BID}-4k"
               sed -i "\$s|echo \"\$res\"|echo \"${KMI_LOCAL}\"|" ./scripts/setlocalversion 2>/dev/null || true
+              sed -i "/^CONFIG_LOCALVERSION=/ s/=\"[^\"]*\"/=\"${KMI_LOCAL}\"/" ./arch/arm64/configs/gki_defconfig 2>/dev/null || true
             else
-              # 6.6+ 清空 setlocalversion 输出，避免与 CONFIG_LOCALVERSION 产生双重 KMI 前缀
-              sed -i '$s/^echo .*/echo ""/' ./scripts/setlocalversion 2>/dev/null || true
+              # 6.6+：修改 setlocalversion 注入版本名称（新格式，参考 wild_kernel）
+              # 保留 ${KERNELVERSION} 和 ${config_localversion} 由脚本运行时解析
+              SUFFIX="-${KMI_TAG}-g${GHASH}-${BID}"
+              perl -i -0777 -pe 's/(.*)echo "\$\{KERNELVERSION\}\$\{file_localversion\}\$\{config_localversion\}\$\{LOCALVERSION\}\$\{scm_version\}"/$1echo "\$\{KERNELVERSION\}'"${SUFFIX}"'\$\{config_localversion\}"/s' ./scripts/setlocalversion 2>/dev/null || true
             fi
-            # 6.6+ 通过 CONFIG_LOCALVERSION 注入版本名称
-            sed -i "/^CONFIG_LOCALVERSION=/ s/=\"[^\"]*\"/=\"${KMI_LOCAL}\"/" ./arch/arm64/configs/gki_defconfig 2>/dev/null || true
           fi
 
       # ==================== 自定义构建时间 ====================
@@ -1036,7 +1040,12 @@ jobs:
               if [ -s "$FRAG" ]; then
                 FRAG_FLAG="--defconfig_fragment=//common:arch/arm64/configs/ksu.fragment"
               fi
-              tools/bazel build --disk_cache=/home/runner/.cache/bazel --config=fast --lto=thin $FRAG_FLAG //common:kernel_aarch64_dist || exit 1
+              # 6.12+ 使用 lto=none（Rust 内核模块不兼容 thin LTO）
+              LTO_FLAG="--lto=thin"
+              if [ "${{ inputs.kernel_version }}" = "6.12" ]; then
+                LTO_FLAG="--lto=none"
+              fi
+              tools/bazel build --disk_cache=/home/runner/.cache/bazel --config=fast $LTO_FLAG $FRAG_FLAG //common:kernel_aarch64_dist || exit 1
               strings ./bazel-bin/common/kernel_aarch64/Image | grep 'Linux version'
             fi
 
