@@ -58,7 +58,7 @@ on:
           - SukiSU
           - ReSukiSU
           - MidoriSU
-        default: MidoriSU
+        default: ReSukiSU
       kernelsu_branch:
         description: "KSU 分支"
         required: true
@@ -74,12 +74,12 @@ on:
         description: "自定义版本名 (可选)"
         required: false
         type: string
-        default: "-gki-midori-build"
+        default: "-gki2.0-midori-build"
       build_time:
         description: "自定义构建时间 (可选，N或留空=当前UTC)"
         required: false
         type: string
-        default: "N"
+        default: "Sun Mar 08 07:11:22 JST 2026"
 
       # ==================== 功能开关 ====================
       use_zram:
@@ -96,7 +96,7 @@ on:
         description: "启用 KPM 功能"
         required: true
         type: boolean
-        default: false
+        default: true
       cancel_susfs:
         description: "禁用 SUSFS"
         required: true
