@@ -13,7 +13,7 @@ on:
         type: choice
         options:
           - Official
-          #- Next
+          - Next
           - MKSU
           - SukiSU
           - ReSukiSU
@@ -32,12 +32,12 @@ on:
         description: "自定义版本名 (可选)"
         required: false
         type: string
-        default: "-android15-8-gki-midori-build"
+        default: "-android15-8-gki-midori-build-4k"
       build_time:
         description: "自定义构建时间 (可选，N或留空=当前UTC)"
         required: false
         type: string
-        default: "N"
+        default: "Mon Feb 02 02:02:02 JST 2026"
       use_zram:
         description: "启用 ZRAM 增强算法"
         required: true
