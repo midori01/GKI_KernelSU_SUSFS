@@ -960,17 +960,26 @@ jobs:
           echo "使用构建时间: $DATESTR"
           echo "KBUILD_BUILD_TIMESTAMP=$DATESTR" >> "$GITHUB_ENV"
           echo "KBUILD_BUILD_VERSION=1" >> "$GITHUB_ENV"
-          echo "KBUILD_BUILD_USER=huskydg" >> "$GITHUB_ENV"
-          echo "KBUILD_BUILD_HOST=china" >> "$GITHUB_ENV"
 
-          # 强力注入 build.config 以覆盖 build.sh 的默认行为
-          find "$KERNEL_ROOT" -name "build.config.gki.aarch64" -o -name "build.config.common" | while read -r cfg; do
-            echo "注入时间戳到: $cfg"
-            sed -i '/export KBUILD_BUILD_TIMESTAMP=/d' "$cfg"
-            echo "export KBUILD_BUILD_TIMESTAMP=\"$DATESTR\"" >> "$cfg"
-            echo "export KBUILD_BUILD_USER=huskydg" >> "$cfg"
-            echo "export KBUILD_BUILD_HOST=china" >> "$cfg"
-          done
+          # 仅针对 5.x 内核通过注入 build.config 修复时间戳被覆盖的问题
+          if [[ "${{ inputs.kernel_version }}" == "5.10" || "${{ inputs.kernel_version }}" == "5.15" ]]; then
+            find "$KERNEL_ROOT" -name "build.config.gki.aarch64" -o -name "build.config.common" | while read -r cfg; do
+              echo "注入时间戳到 5.x build.config: $cfg"
+              sed -i '/export KBUILD_BUILD_TIMESTAMP=/d' "$cfg"
+              echo "export KBUILD_BUILD_TIMESTAMP=\"$DATESTR\"" >> "$cfg"
+            done
+          fi
+
+          # 恢复对 6.x 有效的 mkcompile_h 补丁逻辑
+          f="$KERNEL_ROOT/common/scripts/mkcompile_h"
+          if [ -f "$f" ]; then
+            echo "应用 mkcompile_h 补丁: $f"
+            if grep -q 'UTS_VERSION=' "$f"; then
+              perl -pi -e "s{UTS_VERSION=\"\\\$\\\(.*?\\\)\"}{UTS_VERSION=\"#1 SMP PREEMPT $DATESTR\"}" "$f"
+            else
+              perl -0777 -pi -e "s{cat <<EOF}{cat <<EOF\n#undef UTS_VERSION\n#define UTS_VERSION \"#1 SMP PREEMPT $DATESTR\" } unless /UTS_VERSION/" "$f"
+            fi
+          fi
 
       - name: 编译内核
         uses: nick-fields/retry@v3
@@ -989,10 +998,6 @@ jobs:
             sed -i '/KMI_SYMBOL_LIST_STRICT_MODE/d' ./common/build.config.gki.aarch64
 
             if [ -f "build/build.sh" ]; then
-              # 为 build.sh 显式传递变量
-              KBUILD_BUILD_TIMESTAMP="${{ env.KBUILD_BUILD_TIMESTAMP }}" \
-              KBUILD_BUILD_USER="${{ env.KBUILD_BUILD_USER }}" \
-              KBUILD_BUILD_HOST="${{ env.KBUILD_BUILD_HOST }}" \
               LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh CC="/usr/bin/ccache clang" || exit 1
             else
               # 提取 gki_defconfig 修改到 fragment，避免 bazel trim 检查失败
@@ -1010,12 +1015,7 @@ jobs:
               if [ "${{ inputs.kernel_version }}" = "6.12" ]; then
                 LTO_FLAG="--lto=none"
               fi
-              # 为 Bazel 显式增加 --action_env
-              tools/bazel build --disk_cache=/home/runner/.cache/bazel --config=fast $LTO_FLAG $FRAG_FLAG \
-                --action_env=KBUILD_BUILD_TIMESTAMP="${{ env.KBUILD_BUILD_TIMESTAMP }}" \
-                --action_env=KBUILD_BUILD_USER="${{ env.KBUILD_BUILD_USER }}" \
-                --action_env=KBUILD_BUILD_HOST="${{ env.KBUILD_BUILD_HOST }}" \
-                //common:kernel_aarch64_dist || exit 1
+              tools/bazel build --disk_cache=/home/runner/.cache/bazel --config=fast $LTO_FLAG $FRAG_FLAG //common:kernel_aarch64_dist || exit 1
               strings ./bazel-bin/common/kernel_aarch64/Image | grep 'Linux version'
             fi
 
