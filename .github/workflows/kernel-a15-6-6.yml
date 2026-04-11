@@ -117,6 +117,8 @@ jobs:
         include:
           - sub_level: "127"
             os_patch_level: "2026-04"
+          - sub_level: "x"
+            os_patch_level: "lts"
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
