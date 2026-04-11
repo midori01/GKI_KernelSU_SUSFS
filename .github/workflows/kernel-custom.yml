@@ -34,12 +34,12 @@ on:
         description: "子版本号 (如 66, 198, X)"
         required: true
         type: string
-        default: "X"
+        default: "127"
       os_patch_level:
         description: "安全补丁级别 (如 2022-01, lts)"
         required: true
         type: string
-        default: "lts"
+        default: "2026-04"
       revision:
         description: "修订版本 (如 r11, 仅 5.10 需要)"
         required: false
@@ -53,12 +53,12 @@ on:
         type: choice
         options:
           - Official
-          #- Next
+          - Next
           - MKSU
           - SukiSU
           - ReSukiSU
           - MidoriSU
-        default: ReSukiSU
+        default: MidoriSU
       kernelsu_branch:
         description: "KSU 分支"
         required: true
@@ -74,12 +74,12 @@ on:
         description: "自定义版本名 (可选)"
         required: false
         type: string
-        default: "-gki2.0-midori-build"
+        default: "-android15-8-gki-midori-build"
       build_time:
         description: "自定义构建时间 (可选，N或留空=当前UTC)"
         required: false
         type: string
-        default: "N"
+        default: "Mon Feb 02 02:02:02 JST 2026"
 
       # ==================== 功能开关 ====================
       use_zram:
