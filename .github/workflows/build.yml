@@ -119,6 +119,9 @@ jobs:
 
       - name: 初始化构建环境
         run: |
+          REAL_BUILD_TIME=$(TZ='Asia/Tokyo' date +'%Y%m%d_%H%M')
+          echo "REAL_BUILD_TIME=$REAL_BUILD_TIME" >> $GITHUB_ENV
+          
           CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
           KERNEL_ROOT="$GITHUB_WORKSPACE/$CONFIG"
           mkdir -p "$KERNEL_ROOT"
@@ -1094,44 +1097,33 @@ jobs:
           rm -rf Image
           mv oImage Image
 
-      - name: 准备 Boot 镜像
-        run: |
-          mkdir -p bootimgs
-
-          if [ "${{ inputs.android_version }}" == "android12" ] || [ "${{ inputs.android_version }}" == "android13" ]; then
-            SRC_DIR="$KERNEL_ROOT/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist"
-          else
-            SRC_DIR="$KERNEL_ROOT/bazel-bin/common/kernel_aarch64"
-          fi
-
-          cp "$SRC_DIR/Image" ./bootimgs/
-          cp "$SRC_DIR/Image.lz4" ./bootimgs/
-          cp "$SRC_DIR/Image" ./
-          cp "$SRC_DIR/Image.lz4" ./
-          gzip -n -k -f -9 ./Image > ./Image.gz
-
       - name: 创建 AnyKernel3 压缩包
         id: create_zip
         run: |
+          REAL_TIME=$(TZ='Asia/Tokyo' date +'%Y%m%d_%H%M')
+          echo "REAL_BUILD_TIME=$REAL_TIME" >> $GITHUB_ENV
+
           if [ "${{ inputs.android_version }}" == "android12" ] || [ "${{ inputs.android_version }}" == "android13" ]; then
             SRC_IMAGE="$KERNEL_ROOT/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image"
           else
             SRC_IMAGE="$KERNEL_ROOT/bazel-bin/common/kernel_aarch64/Image"
           fi
-          
-          RAW_NAME="${{ inputs.ksu_variant }}_kernel-${{ env.CONFIG }}.zip"
-          FINAL_ZIP_NAME=$(echo "$RAW_NAME" | tr ' ' '_')
-          
-          SAFE_TIME=$(echo "${{ env.KBUILD_BUILD_TIMESTAMP }}" | tr ' ' '_')
-          RELEASE_TAG="Build_${{ env.CONFIG }}_${SAFE_TIME}"
-          
+
+          if [ ! -f "$SRC_IMAGE" ]; then
+            echo "::error::未找到内核镜像文件: $SRC_IMAGE"
+            exit 1
+          fi
+
+          RAW_ZIP_NAME="${{ inputs.ksu_variant }}_kernel-${{ env.CONFIG }}.zip"
+          FINAL_ZIP_NAME=$(echo "$RAW_ZIP_NAME" | tr ' ' '_')
+
           cd $ANYKERNEL3
           cp "$SRC_IMAGE" ./Image
           zip -r "../$FINAL_ZIP_NAME" ./*
           
           echo "FINAL_ZIP_NAME=$FINAL_ZIP_NAME" >> $GITHUB_ENV
           echo "FINAL_ZIP_PATH=$GITHUB_WORKSPACE/$FINAL_ZIP_NAME" >> $GITHUB_ENV
-          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+          echo "RELEASE_TAG=Build_${{ env.CONFIG }}_$REAL_TIME" >> $GITHUB_ENV
 
       - name: 上传构建产物 (Artifacts)
         uses: actions/upload-artifact@v4
@@ -1145,15 +1137,15 @@ jobs:
         if: github.event_name != 'pull_request' && success()
         with:
           tag_name: ${{ env.RELEASE_TAG }}
-          name: "${{ inputs.ksu_variant }} - ${{ env.CONFIG }}"
+          name: "${{ inputs.ksu_variant }} - ${{ env.CONFIG }} (${{ env.REAL_BUILD_TIME }})"
           body: |
-            - **构建时间**: `${{ env.KBUILD_BUILD_TIMESTAMP }}`
-            - **KMI 版本**: `${{ inputs.android_version }}`
+            - **构建时间**: `${{ env.REAL_BUILD_TIME }}`
+            - **伪装时间**: `${{ env.KBUILD_BUILD_TIMESTAMP }}`
             - **内核版本**: `${{ inputs.kernel_version }}.${{ env.ACTUAL_SUBLEVEL }}`
+            - **KMI 版本**: `${{ inputs.android_version }}-${{ inputs.kernel_version }}`
             - **KSU 变体**: `${{ inputs.ksu_variant }}`
             - **KSU 提交**: `${{ env.KSU_LATEST_COMMIT_DATE }}`
             - **SUSFS**: `${{ inputs.enable_susfs }}`
           files: ${{ env.FINAL_ZIP_PATH }}
-          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
