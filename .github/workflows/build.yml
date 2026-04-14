@@ -121,7 +121,7 @@ jobs:
         run: |
           REAL_BUILD_TIME=$(TZ='Asia/Tokyo' date +'%Y%m%d_%H%M')
           echo "REAL_BUILD_TIME=$REAL_BUILD_TIME" >> $GITHUB_ENV
-          echo "RELEASE_TAG=Build_$REAL_BUILD_TIME" >> $GITHUB_ENV
+          echo "RELEASE_TAG=Build_Run_${{ github.run_id }}" >> $GITHUB_ENV
           
           CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
           KERNEL_ROOT="$GITHUB_WORKSPACE/$CONFIG"
@@ -1143,6 +1143,7 @@ jobs:
           body: |
             ---
             ### 构建详情: ${{ inputs.ksu_variant }} - ${{ env.CONFIG }}
+            - **构建时间**: `${{ env.REAL_BUILD_TIME }}`
             - **内核版本**: `${{ inputs.kernel_version }}.${{ env.ACTUAL_SUBLEVEL }}`
             - **KMI 版本**: `${{ inputs.android_version }}-${{ inputs.kernel_version }}`
             - **KSU 变体**: `${{ inputs.ksu_variant }}`
