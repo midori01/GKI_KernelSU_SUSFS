@@ -37,7 +37,7 @@ on:
         description: "自定义构建时间 (可选，N或留空=当前UTC)"
         required: false
         type: string
-        default: "Mon Feb 02 02:02:02 JST 2026"
+        default: "Tue Mar 03 03:03:03 JST 2026"
       use_zram:
         description: "启用 ZRAM 增强算法"
         required: true
