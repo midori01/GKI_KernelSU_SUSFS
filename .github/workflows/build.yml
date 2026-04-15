@@ -121,9 +121,9 @@ jobs:
         run: |
           REAL_BUILD_TIME=$(TZ='Asia/Tokyo' date +'%Y%m%d_%H%M')
           echo "REAL_BUILD_TIME=$REAL_BUILD_TIME" >> $GITHUB_ENV
-          echo "RELEASE_TAG=Build_Run_${{ github.run_id }}" >> $GITHUB_ENV
-          
-          CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
+          echo "RELEASE_TAG=Kernel_Batch_$REAL_BUILD_TIME" >> $GITHUB_ENV
+          CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}"
+          echo "CONFIG=$CONFIG" >> $GITHUB_ENV
           KERNEL_ROOT="$GITHUB_WORKSPACE/$CONFIG"
           mkdir -p "$KERNEL_ROOT"
 
@@ -1102,17 +1102,11 @@ jobs:
         id: create_zip
         run: |
           REAL_TIME=$(TZ='Asia/Tokyo' date +'%Y%m%d_%H%M')
-          echo "REAL_BUILD_TIME=$REAL_TIME" >> $GITHUB_ENV
 
           if [ "${{ inputs.android_version }}" == "android12" ] || [ "${{ inputs.android_version }}" == "android13" ]; then
             SRC_IMAGE="$KERNEL_ROOT/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image"
           else
             SRC_IMAGE="$KERNEL_ROOT/bazel-bin/common/kernel_aarch64/Image"
-          fi
-
-          if [ ! -f "$SRC_IMAGE" ]; then
-            echo "::error::未找到内核镜像文件: $SRC_IMAGE"
-            exit 1
           fi
 
           RAW_ZIP_NAME="${{ inputs.ksu_variant }}_kernel-${{ env.CONFIG }}.zip"
@@ -1124,7 +1118,6 @@ jobs:
           
           echo "FINAL_ZIP_NAME=$FINAL_ZIP_NAME" >> $GITHUB_ENV
           echo "FINAL_ZIP_PATH=$GITHUB_WORKSPACE/$FINAL_ZIP_NAME" >> $GITHUB_ENV
-          echo "RELEASE_TAG=Build_${{ env.CONFIG }}_$REAL_TIME" >> $GITHUB_ENV
 
       - name: 上传构建产物 (Artifacts)
         uses: actions/upload-artifact@v4
@@ -1138,17 +1131,15 @@ jobs:
         if: github.event_name != 'pull_request' && success()
         with:
           tag_name: ${{ env.RELEASE_TAG }}
-          name: "Kernel Batch Build (${{ env.REAL_BUILD_TIME }})"
+          name: "Kernel Midori Build (${{ env.REAL_BUILD_TIME }})"
           append_body: true
           body: |
             ---
             ### 构建详情: ${{ inputs.ksu_variant }} - ${{ env.CONFIG }}
-            - **构建时间**: `${{ env.REAL_BUILD_TIME }}`
             - **内核版本**: `${{ inputs.kernel_version }}.${{ env.ACTUAL_SUBLEVEL }}`
-            - **KMI 版本**: `${{ inputs.android_version }}-${{ inputs.kernel_version }}`
-            - **KSU 变体**: `${{ inputs.ksu_variant }}`
             - **KSU 提交**: `${{ env.KSU_LATEST_COMMIT_DATE }}`
             - **SUSFS**: `${{ inputs.enable_susfs }}`
+            - **构建时间**: `${{ env.REAL_BUILD_TIME }}`
           files: ${{ env.FINAL_ZIP_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
