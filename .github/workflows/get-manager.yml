@@ -76,13 +76,16 @@ jobs:
             git clone https://github.com/midori01/ReSukiSU.git KernelSU
           elif [ "${{ inputs.kernelsu_variant }}" == "Official" ]; then
             echo "This is the Official variant"
-            git clone https://github.com/azkx/KernelSU.git KernelSU
+            git clone https://github.com/tiann/KernelSU.git KernelSU
           elif [ "${{ inputs.kernelsu_variant }}" == "MKSU" ]; then
             echo "This is the MKSU variant"
             git clone https://github.com/5ec1cff/KernelSU.git KernelSU
           elif [ "${{ inputs.kernelsu_variant }}" == "MidoriSU" ]; then
             echo "This is the MidoriSU variant"
             git clone https://github.com/midori01/KernelSU.git KernelSU
+          elif [ "${{ inputs.kernelsu_variant }}" == "MidoriXX" ]; then
+            echo "This is the MidoriXX variant"
+            git clone https://github.com/azkx/KernelSU.git KernelSU
           else
             echo "Unknown variant"
           fi
@@ -99,6 +102,8 @@ jobs:
           elif [ "${{ inputs.kernelsu_variant }}" == "ReSukiSU" ]; then
             KSU_VERSION=$((30000 + KSU_GIT_VERSION + 700))
           elif [ "${{ inputs.kernelsu_variant }}" == "MidoriSU" ]; then
+            KSU_VERSION=$((30000 + KSU_GIT_VERSION))
+          elif [ "${{ inputs.kernelsu_variant }}" == "MidoriXX" ]; then
             KSU_VERSION=$((30000 + KSU_GIT_VERSION))
           elif [ "${{ inputs.kernelsu_variant }}" == "Official" ] || [ "${{ inputs.kernelsu_variant }}" == "MKSU" ] || [ "${{ inputs.kernelsu_variant }}" == "Next" ]; then
             KSU_VERSION=$((30000 + KSU_GIT_VERSION))
@@ -138,11 +143,15 @@ jobs:
             KSUM="manager"
           elif [ "${{ inputs.kernelsu_variant }}" == "Official" ]; then
             echo "KSU..."
-            REPO="azkx/KernelSU"
+            REPO="tiann/KernelSU"
             KSUM="manager"
           elif [ "${{ inputs.kernelsu_variant }}" == "MidoriSU" ]; then
             echo "MidoriSU..."
             REPO="midori01/KernelSU"
+            KSUM="manager"
+          elif [ "${{ inputs.kernelsu_variant }}" == "MidoriXX" ]; then
+            echo "MidoriXX..."
+            REPO="azkx/KernelSU"
             KSUM="manager"
           fi
 
