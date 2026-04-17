@@ -13,11 +13,12 @@ on:
         type: choice
         options:
           - Official
-          #- Next
+          - Next
           - MKSU
           - SukiSU
           - ReSukiSU
           - MidoriSU
+          - MidoriXX
         default: MidoriSU
       kernelsu_branch:
         description: "KSU 分支"

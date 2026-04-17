@@ -58,6 +58,7 @@ on:
           - SukiSU
           - ReSukiSU
           - MidoriSU
+          - MidoriXX
         default: MidoriSU
       kernelsu_branch:
         description: "KSU 分支"
