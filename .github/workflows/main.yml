@@ -43,6 +43,7 @@ on:
           - Next
           - MKSU
           - MidoriSU
+          - MidoriXX
         default: MidoriSU
       kernelsu_branch:
         description: "KSU 分支"
@@ -280,6 +281,7 @@ jobs:
             "SukiSU")    KSU_NAME="SukiSU" ;;
             "ReSukiSU")  KSU_NAME="ReSukiSU" ;;
             "MidoriSU")     KSU_NAME="MidoriSU" ;;
+            "MidoriXX")     KSU_NAME="MidoriXX" ;;
           esac
           echo "KSU_NAME=$KSU_NAME" >> $GITHUB_ENV
 
@@ -350,8 +352,7 @@ jobs:
         if: inputs.kernelsu_branch == 'Dev(开发)' || inputs.kernelsu_variant == 'MKSU' || inputs.kernelsu_variant == 'SukiSU' || inputs.kernelsu_variant == 'ReSukiSU'
         run: |
           case "${{ inputs.kernelsu_variant }}" in
-            "Official"|"MKSU"|"MidoriSU") BRANCH="main" ;;
-            "SukiSU"|"ReSukiSU") BRANCH="main" ;;
+            "Official"|"MKSU"|"MidoriSU"|"MidoriXX"|"SukiSU"|"ReSukiSU") BRANCH="main" ;;
             "Next") BRANCH="dev" ;;
             *) echo "错误: 未知变体" >&2; exit 1 ;;
           esac
@@ -362,12 +363,13 @@ jobs:
       - name: 获取 KernelSU 提交信息
         run: |
           case "${{ inputs.kernelsu_variant }}" in
-            "Official") REPO_URL="https://github.com/azkx/KernelSU.git"; REPO_URL2="azkx/KernelSU" ;;
+            "Official") REPO_URL="https://github.com/tiann/KernelSU.git"; REPO_URL2="tiann/KernelSU" ;;
             "Next") REPO_URL="https://github.com/KernelSU-Next/KernelSU-Next.git"; REPO_URL2="KernelSU-Next/KernelSU-Next" ;;
             "MKSU") REPO_URL="https://github.com/5ec1cff/KernelSU.git"; REPO_URL2="5ec1cff/KernelSU" ;;
             "SukiSU") REPO_URL="https://github.com/SukiSU-Ultra/SukiSU-Ultra.git"; REPO_URL2="SukiSU-Ultra/SukiSU-Ultra" ;;
             "ReSukiSU") REPO_URL="https://github.com/midori01/ReSukiSU.git"; REPO_URL2="midori01/ReSukiSU" ;;
             "MidoriSU") REPO_URL="https://github.com/midori01/KernelSU.git"; REPO_URL2="midori01/KernelSU" ;;
+            "MidoriXX") REPO_URL="https://github.com/azkx/KernelSU.git"; REPO_URL2="azkx/KernelSU" ;;
           esac
 
           if [[ "${{ inputs.kernelsu_branch }}" == "Stable(标准)" && "${{ inputs.kernelsu_variant }}" != "MKSU" ]]; then
